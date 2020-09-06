@@ -1,0 +1,56 @@
+#!/bin/bash
+
+dir=$(pwd)
+current_date=$(date)
+user=$(whoami)
+hostname=$(hostname)
+disk_size=$(df -h | grep '/dev' | awk '{print($2)}')
+disk_avail=$(df -h | grep '/dev' | awk '{print($4)}')
+mounted_root=$(df -h | grep -w '/' | awk '{print($2)}')
+swap_total=$(free -h | grep 'Swap' | awk '{print($2)}')
+swap_used=$(free -h | grep 'Swap' | awk '{print($3)}')
+swap_free=$(free -h | grep 'Swap' | awk '{print($4)}')
+
+
+echo -e "\n"
+echo -e "The current directory: $dir\n"
+echo -e "The current date: $current_date\n"
+echo -e "The user logged in is: $user\n"
+echo -e "Hostname: $hostname\n"
+
+
+echo "CPU: "
+cat /proc/cpuinfo | grep 'model name' | uniq
+lscpu | grep 'Architecture'
+lscpu | grep 'MHz'
+cat /proc/cpuinfo | grep 'cpu cores' | uniq
+lscpu | grep 'Thread(s) per core'
+echo -e "\n"
+
+
+echo "RAM: "
+cat /proc/meminfo | grep 'MemTotal'
+cat /proc/meminfo | grep 'MemFree'
+echo -e "\n"
+
+
+echo "Disk: "
+echo "size: $disk_size"
+echo "available: $disk_avail"
+echo "mounted on /: $mounted_root"
+echo "swap total: $swap_total"
+echo "swap used: $swap_used"
+echo "swap free: $swap_free"
+echo -e "\n"
+
+
+count_interfaces=0
+
+interfaces_file=$(ls /sys/class/net)
+for var in $interfaces_file
+do
+echo $var
+count_interfaces=$((count_interfaces+1))
+done
+
+echo "number of network interfaces: $count_interfaces"
