@@ -49,8 +49,12 @@ count_interfaces=0
 interfaces_file=$(ls /sys/class/net)
 for var in $interfaces_file
 do
-echo $var
 count_interfaces=$((count_interfaces+1))
 done
+
+ifconfig -a | grep mtu | gawk '{print $1}'
+ifconfig -a | grep ether | gawk '{print $2}'
+ifconfig -a | grep -w inet | gawk '{print $2}'
+
 
 echo "number of network interfaces: $count_interfaces"
