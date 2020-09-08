@@ -6,7 +6,7 @@ user=$(whoami)
 hostname=$(hostname)
 disk_size=$(df -h | grep '/dev' | awk '{print($2)}')
 disk_avail=$(df -h | grep '/dev' | awk '{print($4)}')
-mounted_root=$(df -h | grep -w '/' | awk '{print($2)}')
+mounted_root=$(df -h | grep -w '/' | awk '{print($1)}')
 swap_total=$(free -h | grep 'Swap' | awk '{print($2)}')
 swap_used=$(free -h | grep 'Swap' | awk '{print($3)}')
 swap_free=$(free -h | grep 'Swap' | awk '{print($4)}')
@@ -45,16 +45,23 @@ echo -e "\n"
 
 
 count_interfaces=0
-
+i=0
+n=2
 interfaces_file=$(ls /sys/class/net)
+
 for var in $interfaces_file
 do
-count_interfaces=$((count_interfaces+1))
+  count_interfaces=$(( count_interfaces + 1 ))
 done
 
-ifconfig -a | grep mtu | gawk '{print $1}'
-ifconfig -a | grep ether | gawk '{print $2}'
-ifconfig -a | grep -w inet | gawk '{print $2}'
 
+while(( i < $count_interfaces ))
+do
+  if [[ $(ifconfig -a | head -n$n | tail -n1 | awk '{print($1)}') = "inet" ]]
+    then i=$(( i + 1 ))
+    echo "$i $(ls /sys/class/net | head -n$i | tail -n1 | awk '{print($i)}') $(ifconfig -a | head -n$n | tail -n1 | awk '{print($2)}')"
+  fi
+  n=$(( n+1 ))
+done
 
 echo "number of network interfaces: $count_interfaces"
