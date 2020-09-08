@@ -1,7 +1,6 @@
 #!/bin/bash
 
 dir=$(pwd)
-current_date=$(date)
 user=$(whoami)
 hostname=$(hostname)
 disk_size=$(df -h | grep '/dev' | awk '{print($2)}')
@@ -13,11 +12,11 @@ swap_free=$(free -h | grep 'Swap' | awk '{print($4)}')
 
 
 echo -e "\n"
-echo -e "The current directory: $dir\n"
-echo -e "The current date: $current_date\n"
-echo -e "The user logged in is: $user\n"
-echo -e "Hostname: $hostname\n"
-
+echo -e "The current directory: $dir"
+echo -e "The current date: $(date | head -n1 | awk '{print($2)}'), $(date | head -n1 | awk '{print($3)}')"
+echo -e "The user logged in is: $user"
+echo -e "Hostname: $hostname"
+echo -e "\n"
 
 echo "CPU: "
 cat /proc/cpuinfo | grep 'model name' | uniq
@@ -45,8 +44,9 @@ echo -e "\n"
 
 
 count_interfaces=0
-i=0
+i=1
 n=2
+speed=$(speedtest| grep 'Download' | awk '{print($2$3)}')
 interfaces_file=$(ls /sys/class/net)
 
 for var in $interfaces_file
@@ -55,11 +55,26 @@ do
 done
 
 
-while(( i < $count_interfaces ))
+while(( i <= $count_interfaces ))
 do
-  if [[ $(ifconfig -a | head -n$n | tail -n1 | awk '{print($1)}') = "inet" ]]
-    then i=$(( i + 1 ))
-    echo "$i $(ls /sys/class/net | head -n$i | tail -n1 | awk '{print($i)}') $(ifconfig -a | head -n$n | tail -n1 | awk '{print($2)}')"
+  if [[ $(ifconfig -a | head -n$n | tail -n1 | awk '{print($1)}') = "inet" || $(ifconfig -a | head -n$n | tail -n1 | awk '{print($1)}') = "ether" ]]
+    then
+      if [[ $(ifconfig -a | head -n$n | tail -n1 | awk '{print($1)}') = "ether" ]]
+        then echo -n -e "\E[29G"
+        echo -n "$(ifconfig -a | head -n$n | tail -n1 | awk '{print($2)}') "
+        echo -n -e "\E[49G"
+        echo "$speed"
+        i=$(( i + 1 ))
+      else
+        echo -n -e "$i $(ls /sys/class/net | head -n$i | tail -n1 | awk '{print($i)}')"
+        echo -n -e "\E[11G"
+        echo -n -e "$(ifconfig -a | head -n$n | tail -n1 | awk '{print($2)}') "
+        if [[ $(ls /sys/class/net | head -n$i | tail -n1 | awk '{print($i)}') = "lo" ]]
+          then echo -n -e "\E[49G"
+          echo "$speed"
+          i=$(( i + 1 ))
+          fi
+      fi
   fi
   n=$(( n+1 ))
 done
