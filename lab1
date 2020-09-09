@@ -19,17 +19,18 @@ echo -e "Hostname: $hostname"
 echo -e "\n"
 
 echo "CPU: "
-cat /proc/cpuinfo | grep 'model name' | uniq
-lscpu | grep 'Architecture'
-lscpu | grep 'MHz'
-cat /proc/cpuinfo | grep 'cpu cores' | uniq
-lscpu | grep 'Thread(s) per core'
+echo "model name - $(cat /proc/cpuinfo | grep 'model name' | uniq | cut -d":" -f2)"
+echo "architecture - $(lscpu | grep 'Architecture' | awk '{print($2)}')"
+echo "CPU MHz - $(lscpu | grep -w 'CPU MHz' | awk '{print($3)}')"
+echo "CPU max MHz - $(lscpu | grep -w 'CPU max MHz' | awk '{print($4)}')"
+echo "CPU cores - $(cat /proc/cpuinfo | grep 'cpu cores' | uniq | awk '{print($4)}')"
+echo "Thread(s) per core - $(lscpu | grep 'Thread(s) per core' | awk '{print($4)}')"
 echo -e "\n"
 
 
 echo "RAM: "
-cat /proc/meminfo | grep 'MemTotal'
-cat /proc/meminfo | grep 'MemFree'
+echo "Mem Total - $(cat /proc/meminfo | grep 'MemTotal' | awk '{print($2)}') kB"
+echo "Mem Free - $(cat /proc/meminfo | grep 'MemFree' | awk '{print($2)}') kB"
 echo -e "\n"
 
 
