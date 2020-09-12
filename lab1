@@ -3,12 +3,12 @@
 dir=$(pwd)
 user=$(whoami)
 hostname=$(hostname)
-disk_size=$(df -h | grep '/dev' | awk '{print($2)}')
-disk_avail=$(df -h | grep '/dev' | awk '{print($4)}')
+disk_size=$(df -h | grep -w '/' | awk '{print($2)}')
+disk_avail=$(df -h | grep -w '/' | awk '{print($4)}')
 mounted_root=$(df -h | grep -w '/' | awk '{print($1)}')
-swap_total=$(free -h | grep 'Swap' | awk '{print($2)}')
-swap_used=$(free -h | grep 'Swap' | awk '{print($3)}')
-swap_free=$(free -h | grep 'Swap' | awk '{print($4)}')
+swap_total=$(free -h | grep 'Подкачка' | awk '{print($2)}')
+swap_used=$(free -h | grep 'Подкачка' | awk '{print($3)}')
+swap_free=$(free -h | grep 'Подкачка' | awk '{print($4)}')
 
 
 echo -e "\n"
@@ -20,11 +20,11 @@ echo -e "\n"
 
 echo "CPU: "
 echo "model name - $(cat /proc/cpuinfo | grep 'model name' | uniq | cut -d":" -f2)"
-echo "architecture - $(lscpu | grep 'Architecture' | awk '{print($2)}')"
-echo "CPU MHz - $(lscpu | grep -w 'CPU MHz' | awk '{print($3)}')"
+echo "architecture - $(lscpu | grep 'Архитектура' | awk '{print($2)}')"
+echo "CPU MHz - $(lscpu | grep -w 'CPU МГц' | awk '{print($3)}')"
 echo "CPU max MHz - $(lscpu | grep -w 'CPU max MHz' | awk '{print($4)}')"
-echo "CPU cores - $(cat /proc/cpuinfo | grep 'cpu cores' | uniq | awk '{print($4)}')"
-echo "Thread(s) per core - $(lscpu | grep 'Thread(s) per core' | awk '{print($4)}')"
+echo "CPU cores - $(lscpu | grep 'Ядер на сокет' | uniq | awk '{print($4)}')"
+echo "Thread(s) per core - $(lscpu | grep 'Потоков на ядро' | awk '{print($4)}')"
 echo -e "\n"
 
 
@@ -44,10 +44,16 @@ echo "swap free: $swap_free"
 echo -e "\n"
 
 
+echo -n "Interface name"
+echo -n -e "\E[29G"
+echo -n "MAC address"
+echo -n -e "\E[49G"
+echo "Connection speed"
+
+
 count_interfaces=0
 i=1
-n=2
-speed=$(speedtest| grep 'Download' | awk '{print($2$3)}')
+n=1
 interfaces_file=$(ls /sys/class/net)
 
 for var in $interfaces_file
@@ -58,6 +64,13 @@ done
 
 while(( i <= $count_interfaces ))
 do
+  if [[ $(ifconfig -a | head -n$n | tail -n1 | awk '{print($3)}') = "mtu" ]]
+    then interface_name=$(ls /sys/class/net | head -n$i | tail -n1 | awk '{print($i)}')
+    echo -n -e "$i $interface_name"
+  fi
+
+  speed=$(sudo ethtool $interface_name | grep 'Speed' | awk '{print($2)}')
+
   if [[ $(ifconfig -a | head -n$n | tail -n1 | awk '{print($1)}') = "inet" || $(ifconfig -a | head -n$n | tail -n1 | awk '{print($1)}') = "ether" ]]
     then
       if [[ $(ifconfig -a | head -n$n | tail -n1 | awk '{print($1)}') = "ether" ]]
@@ -67,7 +80,6 @@ do
         echo "$speed"
         i=$(( i + 1 ))
       else
-        echo -n -e "$i $(ls /sys/class/net | head -n$i | tail -n1 | awk '{print($i)}')"
         echo -n -e "\E[11G"
         echo -n -e "$(ifconfig -a | head -n$n | tail -n1 | awk '{print($2)}') "
         if [[ $(ls /sys/class/net | head -n$i | tail -n1 | awk '{print($i)}') = "lo" ]]
