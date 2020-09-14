@@ -29,8 +29,8 @@ echo -e "\n"
 
 
 echo "RAM: "
-echo "Mem Total - $(cat /proc/meminfo | grep 'MemTotal' | awk '{print($2)}') kB"
-echo "Mem Free - $(cat /proc/meminfo | grep 'MemFree' | awk '{print($2)}') kB"
+echo "Mem Total - $(cat /proc/meminfo | grep 'MemTotal' | awk '{print($2)/1024}') Gi"
+echo "Mem Free - $(cat /proc/meminfo | grep 'MemFree' | awk '{print($2)/1024}') Gi"
 echo -e "\n"
 
 
@@ -49,7 +49,6 @@ echo -n -e "\E[29G"
 echo -n "MAC address"
 echo -n -e "\E[49G"
 echo "Connection speed"
-
 
 count_interfaces=0
 i=1
