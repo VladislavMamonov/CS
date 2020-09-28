@@ -23,16 +23,30 @@ string GetCpuModel()
 }
 
 
-double benchmark_atan2(long Lnum = 1)
+double benchmark_atan2(const char *operand_type, long Lnum = 1)
 {
   double time = 0;
   double t;
 
-  for (long i = 0; i < Lnum; i++) {
-    t = clock();
-    atan2(rand(), rand());
-    time += (clock() - t) / CLOCKS_PER_SEC;
-  }
+  if (strcmp(operand_type, "double") == 0) {
+    for (long i = 0; i < Lnum; i++) {
+      t = clock();
+      atan2((double)rand(), (double)rand());
+      time += (clock() - t) / CLOCKS_PER_SEC;
+    }
+  } else if (strcmp(operand_type, "float") == 0) {
+    for (long i = 0; i < Lnum; i++) {
+      t = clock();
+      atan2((float)rand(), (float)rand());
+      time += (clock() - t) / CLOCKS_PER_SEC;
+    }
+  } else if (strcmp(operand_type, "long double") == 0) {
+    for (long i = 0; i < Lnum; i++) {
+      t = clock();
+      atan2((long double)rand(), (long double)rand());
+      time += (clock() - t) / CLOCKS_PER_SEC;
+    }
+  } else return -1;
 
   time /= Lnum;
 
@@ -40,16 +54,30 @@ double benchmark_atan2(long Lnum = 1)
 }
 
 
-double benchmark_cbrt(long Lnum = 1)
+double benchmark_cbrt(const char *operand_type, long Lnum = 1)
 {
   double time = 0;
   double t;
 
-  for (long i = 0; i < Lnum; i++) {
-    t = clock();
-    cbrt(rand());
-    time += (clock() - t) / CLOCKS_PER_SEC;
-  }
+  if (strcmp(operand_type, "double") == 0) {
+    for (long i = 0; i < Lnum; i++) {
+      t = clock();
+      cbrt((double)rand());
+      time += (clock() - t) / CLOCKS_PER_SEC;
+    }
+  } else if (strcmp(operand_type, "float") == 0) {
+    for (long i = 0; i < Lnum; i++) {
+      t = clock();
+      cbrt((float)rand());
+      time += (clock() - t) / CLOCKS_PER_SEC;
+    }
+  } else if (strcmp(operand_type, "long double") == 0) {
+    for (long i = 0; i < Lnum; i++) {
+      t = clock();
+      cbrt((long double)rand());
+      time += (clock() - t) / CLOCKS_PER_SEC;
+    }
+  } else return -1;
 
   time /= Lnum;
 
@@ -57,16 +85,30 @@ double benchmark_cbrt(long Lnum = 1)
 }
 
 
-double benchmark_hypot(long Lnum = 1)
+double benchmark_hypot(const char *operand_type, long Lnum = 1)
 {
   double time = 0;
   double t;
 
-  for (long i = 0; i < Lnum; i++) {
-    t = clock();
-    hypot(rand(), rand());
-    time += (clock() - t) / CLOCKS_PER_SEC;
-  }
+  if (strcmp(operand_type, "double") == 0) {
+    for (long i = 0; i < Lnum; i++) {
+      t = clock();
+      hypot((double)rand(), (double)rand());
+      time += (clock() - t) / CLOCKS_PER_SEC;
+    }
+  } else if (strcmp(operand_type, "float") == 0) {
+    for (long i = 0; i < Lnum; i++) {
+      t = clock();
+      hypot((float)rand(), (float)rand());
+      time += (clock() - t) / CLOCKS_PER_SEC;
+    }
+  } else if (strcmp(operand_type, "long_double") == 0) {
+    for (long i = 0; i < Lnum; i++) {
+      t = clock();
+      hypot((long double)rand(), (long double)rand());
+      time += (clock() - t) / CLOCKS_PER_SEC;
+    }
+  } else return -1;
 
   time /= Lnum;
 
@@ -80,20 +122,24 @@ int main(int argc, char const *argv[])
   long Lnum = 1;
   double time;
 
-  if (argc == 1) {
-    cout << "Launch format: ./[program_name] [test_name] [launch_number]" << endl;
+  if (argc != 4) {
+    cout << "Launch format: ./[program_name] [test_name] [launch_number] [operand_type]" << endl;
     return 1;
   }
 
-  if (argc == 3)
-    Lnum = atoi(argv[2]);
+  if ((strcmp(argv[3], "double") != 0) && (strcmp(argv[3], "float") != 0) && (strcmp(argv[3], "long_double"))) {
+    cout << "Unknown operand type" << endl;
+    return 1;
+  }
+
+  Lnum = atoi(argv[2]);
 
   if (strcmp(argv[1], "atan2") == 0)
-    time = benchmark_atan2(Lnum);
+    time = benchmark_atan2(argv[3], Lnum);
   else if (strcmp(argv[1], "cbrt") == 0)
-    time = benchmark_cbrt(Lnum);
+    time = benchmark_cbrt(argv[3], Lnum);
   else if (strcmp(argv[1], "hypot") == 0)
-    time = benchmark_hypot(Lnum);
+    time = benchmark_hypot(argv[3], Lnum);
   else {
     cout << "Unknown benchmark" << endl;
     return 1;
@@ -103,6 +149,7 @@ int main(int argc, char const *argv[])
 
   BenchResults << "Pmodel - " << GetCpuModel() << endl;
   BenchResults << "Task - " << argv[1] << endl;
+  BenchResults << "OpType - " << argv[3] << endl;
   BenchResults << "Number of launches - " << Lnum << endl;
   BenchResults << "Average time - " << time << endl;
 
