@@ -9,6 +9,11 @@
 
 using namespace std;
 
+#define FLOPS_ATAN2 4
+#define FLOPS_CBRT 4
+#define FLOPS_HYPOT 4
+
+
 string GetCpuModel()
 {
   ifstream cpuinfo("/proc/cpuinfo");
@@ -132,6 +137,7 @@ double benchmark_hypot(const char *operand_type, long Lnum = 1)
 
 int main(int argc, char const *argv[])
 {
+  return 0;
   srand(time(NULL));
   long Lnum = 1;
   double time;
@@ -169,7 +175,5 @@ int main(int argc, char const *argv[])
   BenchResults << "Average time - " << time << endl;
 
   BenchResults.close();
-  char *arg_execv[] = { "instruction_counter", 0 };
-  execv(arg_execv[0], arg_execv);
-  return 0;
+  //return 0;
 }
