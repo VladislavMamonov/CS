@@ -9,9 +9,11 @@
 
 using namespace std;
 
-#define FLOPS_ATAN2 4
-#define FLOPS_CBRT 4
-#define FLOPS_HYPOT 4
+#define FLOPS_SIN 4
+#define FLOPS_LOG 60
+#define FLOPS_POW 133
+
+#define CPU_FREQUENCY 2.2
 
 
 string GetCpuModel()
@@ -42,7 +44,7 @@ string GetOpt()
 }
 
 
-double benchmark_atan2(const char *operand_type, long Lnum = 1)
+double benchmark_sin(const char *operand_type, double *times_iter, long Lnum = 1)
 {
   double time = 0;
   double t;
@@ -50,20 +52,23 @@ double benchmark_atan2(const char *operand_type, long Lnum = 1)
   if (strcmp(operand_type, "double") == 0) {
     for (long i = 0; i < Lnum; i++) {
       t = clock();
-      atan2((double)rand(), (double)rand());
-      time += (clock() - t) / CLOCKS_PER_SEC;
+      sin((double)rand());
+      times_iter[i] = (clock() - t) / CLOCKS_PER_SEC;
+      time += times_iter[i];
     }
   } else if (strcmp(operand_type, "float") == 0) {
     for (long i = 0; i < Lnum; i++) {
       t = clock();
-      atan2((float)rand(), (float)rand());
-      time += (clock() - t) / CLOCKS_PER_SEC;
+      sin((float)rand());
+      times_iter[i] = (clock() - t) / CLOCKS_PER_SEC;
+      time += times_iter[i];
     }
   } else if (strcmp(operand_type, "long double") == 0) {
     for (long i = 0; i < Lnum; i++) {
       t = clock();
-      atan2((long double)rand(), (long double)rand());
-      time += (clock() - t) / CLOCKS_PER_SEC;
+      sin((long double)rand());
+      times_iter[i] = (clock() - t) / CLOCKS_PER_SEC;
+      time += times_iter[i];
     }
   } else return -1;
 
@@ -73,7 +78,7 @@ double benchmark_atan2(const char *operand_type, long Lnum = 1)
 }
 
 
-double benchmark_cbrt(const char *operand_type, long Lnum = 1)
+double benchmark_log(const char *operand_type, double *times_iter, long Lnum = 1)
 {
   double time = 0;
   double t;
@@ -81,20 +86,23 @@ double benchmark_cbrt(const char *operand_type, long Lnum = 1)
   if (strcmp(operand_type, "double") == 0) {
     for (long i = 0; i < Lnum; i++) {
       t = clock();
-      cbrt((double)rand());
-      time += (clock() - t) / CLOCKS_PER_SEC;
+      log((double)rand());
+      times_iter[i] = (clock() - t) / CLOCKS_PER_SEC;
+      time += times_iter[i];
     }
   } else if (strcmp(operand_type, "float") == 0) {
     for (long i = 0; i < Lnum; i++) {
       t = clock();
-      cbrt((float)rand());
-      time += (clock() - t) / CLOCKS_PER_SEC;
+      log((float)rand());
+      times_iter[i] = (clock() - t) / CLOCKS_PER_SEC;
+      time += times_iter[i];
     }
   } else if (strcmp(operand_type, "long double") == 0) {
     for (long i = 0; i < Lnum; i++) {
       t = clock();
-      cbrt((long double)rand());
-      time += (clock() - t) / CLOCKS_PER_SEC;
+      log((long double)rand());
+      times_iter[i] = (clock() - t) / CLOCKS_PER_SEC;
+      time += times_iter[i];
     }
   } else return -1;
 
@@ -104,7 +112,7 @@ double benchmark_cbrt(const char *operand_type, long Lnum = 1)
 }
 
 
-double benchmark_hypot(const char *operand_type, long Lnum = 1)
+double benchmark_pow(const char *operand_type, double *times_iter, long Lnum = 1)
 {
   double time = 0;
   double t;
@@ -112,35 +120,82 @@ double benchmark_hypot(const char *operand_type, long Lnum = 1)
   if (strcmp(operand_type, "double") == 0) {
     for (long i = 0; i < Lnum; i++) {
       t = clock();
-      hypot((double)rand(), (double)rand());
-      time += (clock() - t) / CLOCKS_PER_SEC;
+      pow((double)rand(), 1000000000000);
+      times_iter[i] = (clock() - t) / CLOCKS_PER_SEC;
+      time += times_iter[i];
     }
   } else if (strcmp(operand_type, "float") == 0) {
     for (long i = 0; i < Lnum; i++) {
       t = clock();
-      hypot((float)rand(), (float)rand());
-      time += (clock() - t) / CLOCKS_PER_SEC;
+      pow((float)rand(), 1000000000000);
+      times_iter[i] = (clock() - t) / CLOCKS_PER_SEC;
+      time += times_iter[i];
     }
   } else if (strcmp(operand_type, "long_double") == 0) {
     for (long i = 0; i < Lnum; i++) {
       t = clock();
-      hypot((long double)rand(), (long double)rand());
-      time += (clock() - t) / CLOCKS_PER_SEC;
+      pow((long double)rand(), 1000000000000);
+      times_iter[i] = (clock() - t) / CLOCKS_PER_SEC;
+      time += times_iter[i];
     }
   } else return -1;
 
   time /= Lnum;
 
   return time;
+}
+
+
+double dispersion(double *times_iter, double avg_time, int Lnum)
+{
+  double dispersion = 0;
+
+  for (int i = 0; i < Lnum; i++)
+      dispersion += pow(times_iter[i] - avg_time, 2);
+
+  dispersion /= (Lnum - 1);
+
+  return dispersion;
+}
+
+
+double abs_error(double avg_time, double InsCount)
+{
+  double flops_per_clock = 16;
+  double clocks_in_task = InsCount / flops_per_clock;
+  double sec_per_clock = 1 / (CPU_FREQUENCY * 1e+9);
+
+  double reference_time = sec_per_clock * clocks_in_task;
+  cout << "reference time: " << reference_time << endl;
+
+  double abs_error = avg_time - reference_time;
+
+  return abs_error;
+}
+
+
+double relative_error(double avg_time, double InsCount)
+{
+  double flops_per_clock = 16;
+  double clocks_in_task = InsCount / flops_per_clock;
+  double sec_per_clock = 1 / (CPU_FREQUENCY * 1e+9);
+
+  double reference_time = sec_per_clock * clocks_in_task;
+
+  double abs_err = abs_error(avg_time, InsCount);
+  double relative_err = (abs_err / reference_time) * 100;     //????
+
+  return relative_err;
 }
 
 
 int main(int argc, char const *argv[])
 {
-  return 0;
   srand(time(NULL));
   long Lnum = 1;
   double time;
+  double FlopsPerSec;
+  double InsCount;
 
   if (argc != 4) {
     cout << "Launch format: ./[program_name] [test_name] [launch_number] [operand_type]" << endl;
@@ -153,17 +208,32 @@ int main(int argc, char const *argv[])
   }
 
   Lnum = atoi(argv[2]);
+  double *times_iter = new double[Lnum];
 
-  if (strcmp(argv[1], "atan2") == 0)
-    time = benchmark_atan2(argv[3], Lnum);
-  else if (strcmp(argv[1], "cbrt") == 0)
-    time = benchmark_cbrt(argv[3], Lnum);
-  else if (strcmp(argv[1], "hypot") == 0)
-    time = benchmark_hypot(argv[3], Lnum);
+  if (strcmp(argv[1], "sin") == 0) {
+    time = benchmark_sin(argv[3], times_iter, Lnum);
+    FlopsPerSec = (FLOPS_SIN / 1e+9) / time;
+    InsCount = FLOPS_SIN;
+  }
+  else if (strcmp(argv[1], "log") == 0) {
+    time = benchmark_log(argv[3], times_iter, Lnum);
+    FlopsPerSec = (FLOPS_LOG / 1e+9) / time;
+    InsCount = FLOPS_LOG;
+  }
+  else if (strcmp(argv[1], "pow") == 0) {
+    time = benchmark_pow(argv[3], times_iter, Lnum);
+    FlopsPerSec = (FLOPS_POW / 1e+9) / time;
+    InsCount = FLOPS_POW;
+  }
   else {
     cout << "Unknown benchmark" << endl;
     return 1;
   }
+
+  double disp = dispersion(times_iter, time, Lnum);
+
+  cout << "dispersion: " << disp << endl;
+  cout << "standard deviation: " << sqrt(disp) << endl;
 
   ofstream BenchResults("BenchResults.csv");
 
@@ -172,8 +242,13 @@ int main(int argc, char const *argv[])
   BenchResults << "Operand type - " << argv[3] << endl;
   BenchResults << "Optimisations - " << GetOpt() << endl;
   BenchResults << "Number of launches - " << Lnum << endl;
+  BenchResults << "Instruction count - " << InsCount << endl;
   BenchResults << "Average time - " << time << endl;
+  BenchResults << "Absolute error - " << abs_error(time, InsCount) << endl;
+  BenchResults << "Relative error - " << relative_error(time, InsCount) << endl;
+  BenchResults << "Task performance - " << FlopsPerSec << " GFlops/sec";
 
+  delete [] times_iter;
   BenchResults.close();
-  //return 0;
+  return 0;
 }

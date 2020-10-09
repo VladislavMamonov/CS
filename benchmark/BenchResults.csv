@@ -1,6 +1,10 @@
 Pmodel - Intel(R) Core(TM) i3-8130U CPU @ 2.20GHz
-Task - atan2
+Task - log
 Operand type - double
-Optimisations - -O2
-Number of launches - 1
-Average time - 0
+Optimisations - -O3
+Number of launches - 100000
+Instruction count - 60
+Average time - 7.3346e-07
+Absolute error - 7.31755e-07
+Relative error - 42929.7
+Task performance - 0.0818041 GFlops/sec

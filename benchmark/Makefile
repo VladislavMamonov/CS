@@ -1,9 +1,9 @@
-OPT = -O2
+OPT = -O3
 
 all: benchmark
 
 benchmark: benchmark.cpp
-	g++ -Wall -pg -g $(OPT) benchmark.cpp -o benchmark
+	g++ -Wall -g $(OPT) benchmark.cpp -o benchmark
 
 clean:
 	rm -rf benchmark
