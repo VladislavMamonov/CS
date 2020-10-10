@@ -5,15 +5,13 @@
 #include <string>
 #include <fstream>
 #include <unistd.h>
-#include <time.h>
+#include <sys/time.h>
 
 using namespace std;
 
 #define FLOPS_SIN 4
 #define FLOPS_LOG 60
 #define FLOPS_POW 133
-
-#define CPU_FREQUENCY 2.2
 
 
 string GetCpuModel()
@@ -63,7 +61,7 @@ double benchmark_sin(const char *operand_type, double *times_iter, long Lnum = 1
       times_iter[i] = (clock() - t) / CLOCKS_PER_SEC;
       time += times_iter[i];
     }
-  } else if (strcmp(operand_type, "long double") == 0) {
+  } else if (strcmp(operand_type, "long_double") == 0) {
     for (long i = 0; i < Lnum; i++) {
       t = clock();
       sin((long double)rand());
@@ -97,7 +95,7 @@ double benchmark_log(const char *operand_type, double *times_iter, long Lnum = 1
       times_iter[i] = (clock() - t) / CLOCKS_PER_SEC;
       time += times_iter[i];
     }
-  } else if (strcmp(operand_type, "long double") == 0) {
+  } else if (strcmp(operand_type, "long_double") == 0) {
     for (long i = 0; i < Lnum; i++) {
       t = clock();
       log((long double)rand());
@@ -161,13 +159,7 @@ double dispersion(double *times_iter, double avg_time, int Lnum)
 
 double abs_error(double avg_time, double InsCount)
 {
-  double flops_per_clock = 16;
-  double clocks_in_task = InsCount / flops_per_clock;
-  double sec_per_clock = 1 / (CPU_FREQUENCY * 1e+9);
-
-  double reference_time = sec_per_clock * clocks_in_task;
-  cout << "reference time: " << reference_time << endl;
-
+  double reference_time = InsCount / CLOCKS_PER_SEC;
   double abs_error = avg_time - reference_time;
 
   return abs_error;
@@ -176,11 +168,8 @@ double abs_error(double avg_time, double InsCount)
 
 double relative_error(double avg_time, double InsCount)
 {
-  double flops_per_clock = 16;
-  double clocks_in_task = InsCount / flops_per_clock;
-  double sec_per_clock = 1 / (CPU_FREQUENCY * 1e+9);
-
-  double reference_time = sec_per_clock * clocks_in_task;
+  double reference_time = InsCount / CLOCKS_PER_SEC;
+  cout << "reference time: " << reference_time << endl;
 
   double abs_err = abs_error(avg_time, InsCount);
   double relative_err = (abs_err / reference_time) * 100;     //????
@@ -237,16 +226,16 @@ int main(int argc, char const *argv[])
 
   ofstream BenchResults("BenchResults.csv");
 
-  BenchResults << "Pmodel - " << GetCpuModel() << endl;
-  BenchResults << "Task - " << argv[1] << endl;
-  BenchResults << "Operand type - " << argv[3] << endl;
-  BenchResults << "Optimisations - " << GetOpt() << endl;
-  BenchResults << "Number of launches - " << Lnum << endl;
-  BenchResults << "Instruction count - " << InsCount << endl;
-  BenchResults << "Average time - " << time << endl;
-  BenchResults << "Absolute error - " << abs_error(time, InsCount) << endl;
-  BenchResults << "Relative error - " << relative_error(time, InsCount) << endl;
-  BenchResults << "Task performance - " << FlopsPerSec << " GFlops/sec";
+  BenchResults << "Pmodel: " << GetCpuModel() << endl;
+  BenchResults << "Task: " << argv[1] << endl;
+  BenchResults << "Operand type: " << argv[3] << endl;
+  BenchResults << "Optimisations: " << GetOpt() << endl;
+  BenchResults << "Number of launches: " << Lnum << endl;
+  BenchResults << "Instruction count: " << InsCount << endl;
+  BenchResults << "Average time: " << time << endl;
+  BenchResults << "Absolute error: " << abs_error(time, InsCount) << endl;
+  BenchResults << "Relative error: " << relative_error(time, InsCount) << endl;
+  BenchResults << "Task performance: " << FlopsPerSec << " GFlops/sec";
 
   delete [] times_iter;
   BenchResults.close();

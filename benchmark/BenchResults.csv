@@ -1,10 +1,10 @@
-Pmodel - Intel(R) Core(TM) i3-8130U CPU @ 2.20GHz
-Task - log
-Operand type - double
-Optimisations - -O3
-Number of launches - 100000
-Instruction count - 60
-Average time - 7.3346e-07
-Absolute error - 7.31755e-07
-Relative error - 42929.7
-Task performance - 0.0818041 GFlops/sec
+Pmodel: Intel(R) Core(TM) i3-8130U CPU @ 2.20GHz
+Task: sin
+Operand type: double
+Optimisations: -O3
+Number of launches: 100
+Instruction count: 4
+Average time: 3e-06
+Absolute error: -1e-06
+Relative error: -25
+Task performance: 0.00133333 GFlops/sec
