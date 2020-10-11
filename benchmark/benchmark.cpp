@@ -157,23 +157,26 @@ double dispersion(double *times_iter, double avg_time, int Lnum)
 }
 
 
-double abs_error(double avg_time, double InsCount)
+double abs_error(double avg_time, double InsCount, const char *operand_type)
 {
-  double reference_time = InsCount / CLOCKS_PER_SEC;
+  double reference_time;
+
+  if (strcmp(operand_type, "double")) {
+    reference_time = InsCount / (16 * 2.2 * 1e+9 * 4);   //kaby lake = 16 flops_per_sec
+  } else {
+    reference_time = InsCount / (32 * 2.2 * 1e+9 * 4);
+  }
+
   double abs_error = avg_time - reference_time;
 
   return abs_error;
 }
 
 
-double relative_error(double avg_time, double InsCount)
+double relative_error(double avg_time, double InsCount, const char *operand_type)
 {
-  double reference_time = InsCount / CLOCKS_PER_SEC;
-  cout << "reference time: " << reference_time << endl;
-
-  double abs_err = abs_error(avg_time, InsCount);
-  double relative_err = (abs_err / reference_time) * 100;     //????
-
+  double abs_err = abs_error(avg_time, InsCount, operand_type);
+  double relative_err = (abs_err / avg_time) * 100;
   return relative_err;
 }
 
@@ -233,8 +236,8 @@ int main(int argc, char const *argv[])
   BenchResults << "Number of launches: " << Lnum << endl;
   BenchResults << "Instruction count: " << InsCount << endl;
   BenchResults << "Average time: " << time << endl;
-  BenchResults << "Absolute error: " << abs_error(time, InsCount) << endl;
-  BenchResults << "Relative error: " << relative_error(time, InsCount) << endl;
+  BenchResults << "Absolute error: " << abs_error(time, InsCount, argv[3]) << endl;
+  BenchResults << "Relative error: " << relative_error(time, InsCount, argv[3]) << endl;
   BenchResults << "Task performance: " << FlopsPerSec << " GFlops/sec";
 
   delete [] times_iter;

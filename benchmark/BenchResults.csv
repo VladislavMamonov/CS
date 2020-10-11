@@ -2,9 +2,9 @@ Pmodel: Intel(R) Core(TM) i3-8130U CPU @ 2.20GHz
 Task: sin
 Operand type: double
 Optimisations: -O3
-Number of launches: 100
+Number of launches: 10000
 Instruction count: 4
-Average time: 3e-06
-Absolute error: -1e-06
-Relative error: -25
-Task performance: 0.00133333 GFlops/sec
+Average time: 8.748e-07
+Absolute error: 8.74786e-07
+Relative error: 99.9984
+Task performance: 0.00457247 GFlops/sec
