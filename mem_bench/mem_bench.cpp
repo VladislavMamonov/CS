@@ -20,7 +20,6 @@ void bench_ram(BenchTime *bt, int bytes, int Lnum = 1)
 {
   double *data = new double[bytes / sizeof(double)];
   double t;
-  double temp;
 
   // запись
   for (long i = 0; i < Lnum; i++) {
@@ -38,7 +37,7 @@ void bench_ram(BenchTime *bt, int bytes, int Lnum = 1)
     t = clock();
 
     for (int i = 0; i < bytes / 8; i++)
-      temp = data[i];
+      data[i];
 
     t = (clock() - t) / CLOCKS_PER_SEC;
     bt->time_read += t;
@@ -51,29 +50,39 @@ void bench_ram(BenchTime *bt, int bytes, int Lnum = 1)
 }
 
 
-void bench_hdd(BenchTime *bt, int bytes, int Lnum = 1)
+void bench_storage(BenchTime *bt, char *dir, int bytes, int Lnum = 1)
 {
   double *data = new double[bytes / sizeof(double)];
-  FILE *hdd_test = fopen("hdd_test.bin", "w+b");
   double t;
   double temp;
+
+  FILE *storage_test;
+  if ((storage_test = fopen(dir, "wb")) == NULL) {
+    cout << "Test file creation error" << endl;
+    return;
+  }
 
   // запись
   for (long i = 0; i < Lnum; i++) {
     t = clock();
-
-    fwrite(data, sizeof(double), bytes / sizeof(double), hdd_test);
-
+    if (fwrite(data, sizeof(double), bytes / sizeof(double), storage_test) != (bytes / sizeof(double))) {
+      cout << "Error writing data to file" << endl;
+      return;
+    }
     t = (clock() - t) / CLOCKS_PER_SEC;
     bt->time_write += t;
   }
 
+  fclose(storage_test);
+  storage_test = fopen(dir, "rb");
+
   // чтение
   for (long i = 0; i < Lnum; i++) {
     t = clock();
-
-    fread(data, sizeof(double), bytes / sizeof(double), hdd_test);
-
+    if (fread(data, sizeof(double), bytes / sizeof(double), storage_test) != (bytes / sizeof(double))) {
+      cout << "Error reading data from file" << endl;
+      return;
+    }
     t = (clock() - t) / CLOCKS_PER_SEC;
     bt->time_read += t;
   }
@@ -81,6 +90,7 @@ void bench_hdd(BenchTime *bt, int bytes, int Lnum = 1)
   bt->time_write /= Lnum;
   bt->time_read /= Lnum;
 
+  fclose(storage_test);
   delete [] data;
 }
 
@@ -91,7 +101,6 @@ int main(int argc, char const *argv[])
   long Lnum = 1;
   int bytes;
   struct BenchTime bt;
-  // double time;
   // double FlopsPerSec;
   // double InsCount;
 
@@ -100,7 +109,7 @@ int main(int argc, char const *argv[])
     return 1;
   }
 
-  if ((strcmp(argv[1], "RAM") != 0) && (strcmp(argv[1], "HDD") != 0) && (strcmp(argv[1], "flash"))) {
+  if ((strcmp(argv[1], "RAM") != 0) && (strcmp(argv[1], "HDD") != 0) && (strcmp(argv[1], "SSD") != 0) && (strcmp(argv[1], "USB"))) {
     cout << "Unknown memory subsystem" << endl;
     return 1;
   }
@@ -118,25 +127,42 @@ int main(int argc, char const *argv[])
       Lnum = 1;
   }
 
-  Lnum = atoi(argv[2]);
+  Lnum = atoi(argv[4]);
 
   if (argc == 4 || (strcmp(argv[3], "b") == 0))
     bytes = atoi(argv[2]);
   else if (argc > 4) {
     if (strcmp(argv[3], "kb") == 0)
       bytes = atoi(argv[2]) * 1024;
-    if (strcmp(argv[3], "mb") == 0)
+    if (strcmp(argv[3], "mb") == 0) {
       bytes = atoi(argv[2]) * 1024 * 1024;
+    }
   }
 
 
   if (strcmp(argv[1], "RAM") == 0)
     bench_ram(&bt, bytes, Lnum);
   else if (strcmp(argv[1], "HDD") == 0)
-    bench_hdd(&bt, bytes, Lnum);
+    bench_storage(&bt, "storage_test.bin", bytes, Lnum);
+  else if (strcmp(argv[1], "SSD") == 0)
+    bench_storage(&bt, "/media/vladislav/8AB657BEB657A989/storage_test.bin", bytes, Lnum);
+  else if (strcmp(argv[1], "USB") == 0)
+    bench_storage(&bt, "/media/vladislav/ESD-USB/storage_test.bin", bytes, Lnum);
 
-  cout << bt.time_write << endl;
-  cout << bt.time_read << endl;
+
+  ofstream BenchResults("BenchResults.csv");
+
+  BenchResults << "Memory type: " << argv[1] << endl;
+  BenchResults << "Block size: " << argv[2] << argv[3] << endl;
+  BenchResults << "Element type: " << "double" << endl;
+  BenchResults << "Buffer size: " << sizeof(double) << "b" << endl;
+  BenchResults << "Launch number: " << argv[4] << endl;
+  BenchResults << "Timer: clock" << endl;
+  BenchResults << "Write time: " << endl;
+  BenchResults << "Avg write time: " << bt.time_write << endl;
+  BenchResults << "Write band width: " << (bytes / 1E+6) / bt.time_write;
+
+  BenchResults.close();
 
   return 0;
 }
