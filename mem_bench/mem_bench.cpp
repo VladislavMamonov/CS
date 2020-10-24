@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <time.h>
 #include <string>
 #include <fstream>
 #include <unistd.h>
@@ -10,51 +11,61 @@
 using namespace std;
 
 
+
 struct BenchTime {
-  double time_write = 0;
-  double time_read = 0;
+  long double time_write = 0;
+  long double time_read = 0;
 };
 
 
-void bench_ram(BenchTime *bt, int bytes, int Lnum = 1)
+
+void bench_ram(BenchTime *bt, int bytes, long double *TimesWrite_iter, long double *TimesRead_iter, int Lnum = 1)
 {
+  struct timespec mt1, mt2;
   double *data = new double[bytes / sizeof(double)];
-  double t;
 
   // запись
   for (long i = 0; i < Lnum; i++) {
-    t = clock();
+    clock_gettime(CLOCK_REALTIME, &mt1);
 
     for (int i = 0; i < bytes / 8; i++)
       data[i] = (double)rand();
 
-    t = (clock() - t) / CLOCKS_PER_SEC;
-    bt->time_write += t;
+    clock_gettime(CLOCK_REALTIME, &mt2);
+    bt->time_write += ((mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec));
+    TimesWrite_iter[i] = bt->time_write;
   }
 
   // чтение
   for (long i = 0; i < Lnum; i++) {
-    t = clock();
+    clock_gettime(CLOCK_REALTIME, &mt1);
 
     for (int i = 0; i < bytes / 8; i++)
       data[i];
 
-    t = (clock() - t) / CLOCKS_PER_SEC;
-    bt->time_read += t;
+    clock_gettime(CLOCK_REALTIME, &mt2);
+    bt->time_read += ((mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec));
+    TimesRead_iter[i] = bt->time_read;
   }
 
   bt->time_write /= Lnum;
   bt->time_read /= Lnum;
+  bt->time_write /= 1E+9;
+  bt->time_read /= 1E+9;
+  for (int i = 0; i < Lnum; i++) {
+    TimesWrite_iter[i] /= 1E+9;
+    TimesRead_iter[i] /= 1E+9;
+  }
 
   delete [] data;
 }
 
 
-void bench_storage(BenchTime *bt, char *dir, int bytes, int Lnum = 1)
+
+void bench_storage(BenchTime *bt, char *dir, int bytes, long double *TimesWrite_iter, long double *TimesRead_iter, int Lnum = 1)
 {
+  struct timespec mt1, mt2;
   double *data = new double[bytes / sizeof(double)];
-  double t;
-  double temp;
 
   FILE *storage_test;
   if ((storage_test = fopen(dir, "wb")) == NULL) {
@@ -64,13 +75,14 @@ void bench_storage(BenchTime *bt, char *dir, int bytes, int Lnum = 1)
 
   // запись
   for (long i = 0; i < Lnum; i++) {
-    t = clock();
+    clock_gettime(CLOCK_REALTIME, &mt1);
     if (fwrite(data, sizeof(double), bytes / sizeof(double), storage_test) != (bytes / sizeof(double))) {
       cout << "Error writing data to file" << endl;
       return;
     }
-    t = (clock() - t) / CLOCKS_PER_SEC;
-    bt->time_write += t;
+    clock_gettime(CLOCK_REALTIME, &mt2);
+    bt->time_write += ((mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec));
+    TimesWrite_iter[i] = bt->time_write;
   }
 
   fclose(storage_test);
@@ -78,21 +90,29 @@ void bench_storage(BenchTime *bt, char *dir, int bytes, int Lnum = 1)
 
   // чтение
   for (long i = 0; i < Lnum; i++) {
-    t = clock();
+    clock_gettime(CLOCK_REALTIME, &mt1);
     if (fread(data, sizeof(double), bytes / sizeof(double), storage_test) != (bytes / sizeof(double))) {
       cout << "Error reading data from file" << endl;
       return;
     }
-    t = (clock() - t) / CLOCKS_PER_SEC;
-    bt->time_read += t;
+    clock_gettime(CLOCK_REALTIME, &mt2);
+    bt->time_read += ((mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec));
+    TimesRead_iter[i] = bt->time_read;
   }
 
   bt->time_write /= Lnum;
   bt->time_read /= Lnum;
+  bt->time_write /= 1E+9;
+  bt->time_read /= 1E+9;
+  for (int i = 0; i < Lnum; i++) {
+    TimesWrite_iter[i] /= 1E+9;
+    TimesRead_iter[i] /= 1E+9;
+  }
 
   fclose(storage_test);
   delete [] data;
 }
+
 
 
 int main(int argc, char const *argv[])
@@ -101,8 +121,6 @@ int main(int argc, char const *argv[])
   long Lnum = 1;
   int bytes;
   struct BenchTime bt;
-  // double FlopsPerSec;
-  // double InsCount;
 
   if (argc < 4 || argc > 5) {
     cout << "Launch format: ./[program_name] [memory_subsystem] [data_block_size] [storage unit(optional)] [launch_number]" << endl;
@@ -119,15 +137,18 @@ int main(int argc, char const *argv[])
       cout << "Unknown storage unit" << endl;
       return 1;
     }
+    Lnum = atoi(argv[4]);
     if (argv[4] <= 0) Lnum = 1;
   }
 
   if (argc == 4) {
+    Lnum = atoi(argv[3]);
     if (argv[3] <= 0)
       Lnum = 1;
   }
 
-  Lnum = atoi(argv[4]);
+  long double TimesWrite_iter[Lnum];
+  long double TimesRead_iter[Lnum];
 
   if (argc == 4 || (strcmp(argv[3], "b") == 0))
     bytes = atoi(argv[2]);
@@ -141,14 +162,13 @@ int main(int argc, char const *argv[])
 
 
   if (strcmp(argv[1], "RAM") == 0)
-    bench_ram(&bt, bytes, Lnum);
+    bench_ram(&bt, bytes, TimesWrite_iter, TimesRead_iter, Lnum);
   else if (strcmp(argv[1], "HDD") == 0)
-    bench_storage(&bt, "storage_test.bin", bytes, Lnum);
+    bench_storage(&bt, "storage_test.bin", bytes, TimesWrite_iter, TimesRead_iter, Lnum);
   else if (strcmp(argv[1], "SSD") == 0)
-    bench_storage(&bt, "/media/vladislav/8AB657BEB657A989/storage_test.bin", bytes, Lnum);
+    bench_storage(&bt, "/media/vladislav/8AB657BEB657A989/storage_test.bin", bytes, TimesWrite_iter, TimesRead_iter, Lnum);
   else if (strcmp(argv[1], "USB") == 0)
-    bench_storage(&bt, "/media/vladislav/ESD-USB/storage_test.bin", bytes, Lnum);
-
+    bench_storage(&bt, "/media/vladislav/ESD-USB/storage_test.bin", bytes, TimesWrite_iter, TimesRead_iter, Lnum);
 
   ofstream BenchResults("BenchResults.csv");
 
@@ -159,8 +179,20 @@ int main(int argc, char const *argv[])
   BenchResults << "Launch number: " << argv[4] << endl;
   BenchResults << "Timer: clock" << endl;
   BenchResults << "Write time: " << endl;
+  for (int i = 0; i < Lnum; i++)
+    BenchResults << "\t" << "Lnum" << "[" << i << "]: " << TimesWrite_iter[i] << endl;
   BenchResults << "Avg write time: " << bt.time_write << endl;
-  BenchResults << "Write band width: " << (bytes / 1E+6) / bt.time_write;
+  BenchResults << "Write band width: " << bytes / 1E+6 / bt.time_write << endl;
+  BenchResults << "Absolute error(write): " << endl;
+  BenchResults << "Relative error(write): " << endl;
+  BenchResults << "Read time: " << endl;
+  for (int i = 0; i < Lnum; i++)
+    BenchResults << "\t" << "Lnum" << "[" << i << "]: " << TimesRead_iter[i] << endl;
+  BenchResults << "Avg read time: " << bt.time_read << endl;
+  BenchResults << "Read band width: " << bytes / 1E+6 / bt.time_read << endl;
+  BenchResults << "Absolute error(read): " << endl;
+  BenchResults << "Relative error(read): " << endl;
+
 
   BenchResults.close();
 
