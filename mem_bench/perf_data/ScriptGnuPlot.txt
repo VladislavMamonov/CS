@@ -1,0 +1,69 @@
+#!/usr/bin/gnuplot
+set terminal png size 1920,1080 enhanced font 'Arial, 16'
+set output 'hdd_flash_BandWidth.png'
+
+set style line 1 linecolor rgb 'red' linetype 1 linewidth 2
+set style line 2 linecolor rgb 'blue' linetype 1 linewidth 2
+
+set border linewidth 2
+set key top left
+set grid
+set mytics 1
+set format y "%.4f"
+set xlabel "Block size (mb)"
+set format x "%3.0f"
+set ylabel "Band width (mb/s)"
+set xtics 4
+set ytics 100
+set rmargin 4
+set tmargin 2
+plot "HDD_write.dat" using 1:2 title "HDD" with linespoints ls 1,\
+"flash_write.dat" using 1:2 title "Flash" with linespoints ls 2
+
+
+
+set terminal png size 1920,1080 enhanced font 'Arial, 16'
+set output 'ram_hdd_flash_error.png'
+
+set style line 1 linecolor rgb 'red' linetype 1 linewidth 2
+set style line 2 linecolor rgb 'blue' linetype 1 linewidth 2
+set style line 3 linecolor rgb 'green' linetype 1 linewidth 2
+
+set border linewidth 2
+set key top left
+set grid
+set format y "%.7f"
+set xlabel "Block size (mb)"
+set format x "%3.0f"
+set ylabel "Relative error (%)"
+set xtics 4
+set ytics 0.0000010
+set rmargin 4
+set tmargin 2
+plot "error_RAM.dat" using 1:2 title "RAM" with linespoints ls 1,\
+"error_HDD.dat" using 1:2 title "HDD" with linespoints ls 2,\
+"error_flash.dat" using 1:2 title "Flash" with linespoints ls 3
+
+
+
+set terminal png size 1920,1080 enhanced font 'Arial, 16'
+set output 'ram_hdd_flash_lnum_error.png'
+
+set style line 1 linecolor rgb 'red' linetype 1 linewidth 2
+set style line 2 linecolor rgb 'blue' linetype 1 linewidth 2
+set style line 3 linecolor rgb 'green' linetype 1 linewidth 2
+
+set border linewidth 2
+set key top left
+set grid
+set format y "%.7f"
+set xlabel "Launch number"
+set format x "%3.0f"
+set ylabel "Relative error (%)"
+set xtics 4
+set ytics 0.0000010
+set rmargin 4
+set tmargin 2
+plot "error_lnum_RAM.dat" using 1:2 title "RAM" with linespoints ls 1,\
+"error_lnum_HDD.dat" using 1:2 title "HDD" with linespoints ls 2,\
+"error_lnum_flash.dat" using 1:2 title "Flash" with linespoints ls 3
