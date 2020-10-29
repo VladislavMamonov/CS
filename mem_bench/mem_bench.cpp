@@ -22,6 +22,7 @@ struct BenchTime {
 void bench_ram(BenchTime *bt, int bytes, long double *TimesWrite_iter, long double *TimesRead_iter, int Lnum = 1)
 {
   struct timespec mt1, mt2;
+  long double t;
 
   // запись
   for (long i = 0; i < Lnum; i++) {
@@ -32,8 +33,9 @@ void bench_ram(BenchTime *bt, int bytes, long double *TimesWrite_iter, long doub
       data[i] = (double)rand();
 
     clock_gettime(CLOCK_REALTIME, &mt2);
-    bt->time_write += 1E+9 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
-    TimesWrite_iter[i] = bt->time_write;
+    t = 1E+9 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
+    bt->time_write += t;
+    TimesWrite_iter[i] = t;
     delete [] data;
   }
 
@@ -46,8 +48,9 @@ void bench_ram(BenchTime *bt, int bytes, long double *TimesWrite_iter, long doub
       data[i];
 
     clock_gettime(CLOCK_REALTIME, &mt2);
-    bt->time_read += 1E+9 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
-    TimesRead_iter[i] = bt->time_read;
+    t = 1E+9 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
+    bt->time_read += t;
+    TimesRead_iter[i] = t;
     delete [] data;
   }
 
@@ -61,6 +64,7 @@ void bench_storage(BenchTime *bt, char *dir, int bytes, long double *TimesWrite_
 {
   struct timespec mt1, mt2;
   double *data = new double[bytes / sizeof(double)];
+  long double t;
 
   FILE *storage_test;
   if ((storage_test = fopen(dir, "wb")) == NULL) {
@@ -76,8 +80,9 @@ void bench_storage(BenchTime *bt, char *dir, int bytes, long double *TimesWrite_
       return;
     }
     clock_gettime(CLOCK_REALTIME, &mt2);
-    bt->time_write += 1E+9 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
-    TimesWrite_iter[i] = bt->time_write;
+    t = 1E+9 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
+    bt->time_write += t;
+    TimesWrite_iter[i] = t;
   }
 
   fclose(storage_test);
@@ -91,8 +96,9 @@ void bench_storage(BenchTime *bt, char *dir, int bytes, long double *TimesWrite_
       return;
     }
     clock_gettime(CLOCK_REALTIME, &mt2);
-    bt->time_read += 1E+9 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
-    TimesRead_iter[i] = bt->time_read;
+    t = 1E+9 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
+    bt->time_read += t;
+    TimesRead_iter[i] = t;
   }
 
   bt->time_write /= Lnum;
@@ -170,7 +176,7 @@ int main(int argc, char const *argv[])
       Lnum = 1;
   }
 
-  if (argc == 2) Lnum = 10;
+  if (argc == 2) Lnum = 20;
 
   long double TimesWrite_iter[Lnum];
   long double TimesRead_iter[Lnum];
