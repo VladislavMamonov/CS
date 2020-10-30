@@ -1,5 +1,25 @@
 #!/usr/bin/gnuplot
 set terminal png size 1920,1080 enhanced font 'Arial, 16'
+set output 'RAM_BandWidth.png'
+
+set style line 1 linecolor rgb 'red' linetype 1 linewidth 2
+
+set border linewidth 2
+set key top left
+set grid
+set mytics 1
+set format y "%.4f"
+set xlabel "cache level"
+set xtics ("CL" 64, "L1" 131072, "L2" 524288, "L3" 4194304, "> L3" 6291456)
+set format x "%3.0f"
+set ylabel "Band width (mb/s)"
+set rmargin 4
+set tmargin 2
+plot "RAM_write.dat" using 1:2 title "RAM" with linespoints ls 1
+
+
+
+set terminal png size 1920,1080 enhanced font 'Arial, 16'
 set output 'hdd_flash_BandWidth.png'
 
 set style line 1 linecolor rgb 'red' linetype 1 linewidth 2
@@ -60,7 +80,7 @@ set format y "%.7f"
 set xlabel "Launch number"
 set format x "%3.0f"
 set ylabel "Relative error (%)"
-set xtics 4
+set xtics 10
 set ytics 0.0000010
 set rmargin 4
 set tmargin 2
